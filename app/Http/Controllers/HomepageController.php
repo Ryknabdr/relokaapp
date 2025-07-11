@@ -128,8 +128,49 @@ class HomepageController extends Controller
 
     public function checkout()
     {
-         return view($this->themeFolder . '.checkout', [
-            'title' => 'Checkout'
+        $customer = auth()->guard('customer')->user();
+
+        if (!$customer) {
+            return redirect()->route('customer.login');
+        }
+
+        $cart = Cart::query()
+            ->with(['items', 'items.itemable'])
+            ->where('user_id', $customer->id)
+            ->first();
+
+        $cartItems = $cart ? $cart->items : collect();
+
+        $subtotal = $cartItems->sum('price');
+        $shippingCost = $subtotal > 50000 ? 0 : 5000;
+        $total = $subtotal + $shippingCost;
+
+        return view($this->themeFolder . '.checkout', [
+            'title' => 'Checkout',
+            'cartItems' => $cartItems,
+            'subtotal' => $subtotal,
+            'shippingCost' => $shippingCost,
+            'total' => $total,
         ]);
+    }
+
+    public function processCheckout(Request $request)
+    {
+        $request->validate([
+            'fullname' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'address' => 'required|string|max:500',
+            'city' => 'required|string|max:255',
+            'state' => 'required|string|max:255',
+            'zip' => 'required|string|max:20',
+            'cardName' => 'required|string|max:255',
+            'cardNumber' => 'required|string|max:20',
+            'cardExp' => 'required|string|max:7',
+            'cardCvv' => 'required|string|max:4',
+        ]);
+
+        // TODO: Implement payment processing and order saving logic here
+
+        return redirect()->route('checkout.index')->with('success', 'Pesanan Anda telah diproses.');
     }
 }

@@ -17,6 +17,7 @@ class CartController extends Controller
                 'user_id' => auth()->guard('customer')->user()->id
             ]
         );
+        \Log::info('CartController constructor: cart loaded', ['cart_id' => $this->cart->id, 'user_id' => auth()->guard('customer')->user()->id]);
     }
 
     public function add(Request $request)
@@ -55,10 +56,20 @@ class CartController extends Controller
 
     public function remove($id)
     {
-
         $product = Product::findOrFail($id);
 
-        $this->cart->removeItem($product);
+        \Log::info('Remove item from cart called', ['product_id' => $id, 'cart_id' => $this->cart->id]);
+
+        // Solusi alternatif: hapus item keranjang secara manual
+        $cartItem = $this->cart->items()->where('itemable_id', $product->id)->first();
+
+        if ($cartItem) {
+            \Log::info('Cart item found for deletion', ['cart_item_id' => $cartItem->id]);
+            $cartItem->delete();
+            \Log::info('Cart item deleted manually', ['cart_item_id' => $cartItem->id]);
+        } else {
+            \Log::warning('Cart item not found for deletion', ['product_id' => $product->id]);
+        }
 
         return redirect()->route('cart.index')->with('success', 'Item removed from cart.');
     }

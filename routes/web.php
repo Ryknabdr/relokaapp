@@ -26,6 +26,16 @@ Route::get('category/{slug}', [HomepageController::class, 'category']);
 Route::get('cart', [HomepageController::class, 'cart'])->name('cart.index');
 Route::get('checkout', [HomepageController::class, 'checkout'])->name('checkout.index');
 
+Route::get('about', function () {
+    return view('about');
+})->name('about');
+
+Route::get('contact', function () {
+    return view('contact');
+})->name('contact');
+
+Route::post('checkout/process', [HomepageController::class, 'processCheckout'])->name('checkout.process');
+
 Route::group(['middleware'=>['is_customer_login']], function(){
     Route::controller(CartController::class)->group(function () {
         Route::post('cart/add', 'add')->name('cart.add');
