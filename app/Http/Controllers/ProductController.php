@@ -13,15 +13,13 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        // Mendapatkan query pencarian
-        $q = $request->get('q', ''); // Menangani parameter pencarian dengan default kosong
+        $q = $request->get('q', '');
 
-        // Mencari produk berdasarkan nama dan deskripsi jika ada pencarian
         $products = Product::when($q, function ($query, $q) {
             return $query->where('name', 'like', "%{$q}%")
                          ->orWhere('description', 'like', "%{$q}%");
-        })->paginate(10); // Menampilkan hasil produk dengan pagination
-        
+        })->paginate(10);
+
         return view('dashboard.products.index', compact('products', 'q'));
     }
 
@@ -31,7 +29,7 @@ class ProductController extends Controller
     public function create()
     {
         $categories = Categories::all();
-        return view('dashboard.products.create', compact('categories')); 
+        return view('dashboard.products.create', compact('categories'));
     }
 
     /**
@@ -39,25 +37,25 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        // Validasi input produk
+        $priceSanitized = str_replace(',', '', $request->price);
+        $request->merge(['price' => $priceSanitized]);
+
         $validator = \Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:products,slug',
             'sku' => 'required|string|unique:products,sku',
-            'price' => 'required|numeric|min:0',
+            'price' => 'required|numeric|min:0|max:99999999.99',
             'stock' => 'required|integer|min:0',
             'product_category_id' => 'nullable|exists:product_categories,id',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',  // Validasi gambar upload
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         if ($validator->fails()) {
-            return redirect()->back()->with(
-                [
-                    'errors' => $validator->errors(),
-                    'errorMessage' => 'Validasi Error, Silahkan lengkapi data terlebih dahulu'
-                ]
-            );
+            return redirect()->back()->with([
+                'errors' => $validator->errors(),
+                'errorMessage' => 'Validasi Error, Silahkan lengkapi data terlebih dahulu'
+            ]);
         }
 
         $product = new Product;
@@ -68,7 +66,7 @@ class ProductController extends Controller
         $product->price = $request->price;
         $product->stock = $request->stock;
         $product->product_category_id = $request->product_category_id;
-        $product->is_active = $request->has('is_active') ? $request->is_active : true;
+        $product->is_active = $request->has('is_active') ? true : false;
 
         if ($request->hasFile('image')) {
             $image = $request->file('image');
@@ -79,19 +77,9 @@ class ProductController extends Controller
 
         $product->save();
 
-        return redirect()->route('products.index')->with(
-            [
-                'success' => 'Produk berhasil ditambahkan.'
-            ]
-        );
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
+        return redirect()->route('products.index')->with([
+            'success' => 'Produk berhasil ditambahkan.'
+        ]);
     }
 
     /**
@@ -112,33 +100,41 @@ class ProductController extends Controller
     {
         $product = Product::findOrFail($id);
 
-        $validator = \Validator::make($request->all(), [
+        // Convert 'on' to true for is_active checkbox
+        $input = $request->all();
+        if (isset($input['is_active']) && $input['is_active'] === 'on') {
+            $input['is_active'] = true;
+        } else {
+            $input['is_active'] = false;
+        }
+
+        $validator = \Validator::make($input, [
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:products,slug,' . $product->id,
             'description' => 'nullable|string',
-            'sku' => 'required|string|unique:products,sku,' . $product->id,
-            'price' => 'required|numeric|min:0',
+            'sku' => 'required|string|max:255|unique:products,sku,' . $product->id,
+            'price' => 'required|numeric|min:0|max:99999999.99',
             'stock' => 'required|integer|min:0',
             'product_category_id' => 'nullable|exists:product_categories,id',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'is_active' => 'boolean',
+            'is_active' => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
-            return redirect()->back()->with(
-                [
-                    'errors' => $validator->errors(),
-                    'errorMessage' => 'Validasi Error, Silahkan lengkapi data terlebih dahulu'
-                ]
-            );
+            return redirect()->back()->with([
+                'errors' => $validator->errors(),
+                'errorMessage' => 'Validasi Error, Silahkan lengkapi data terlebih dahulu'
+            ]);
         }
 
-        $product->name = $request->name;
-        $product->slug = $request->slug;
-        $product->description = $request->description;
-        $product->sku = $request->sku;
-        $product->product_category_id = $request->product_category_id;
-        $product->is_active = $request->has('is_active') ? $request->is_active : true;
+        $product->name = $input['name'];
+        $product->slug = $input['slug'];
+        $product->description = $input['description'];
+        $product->sku = $input['sku'];
+        $product->price = $input['price'];
+        $product->stock = $input['stock'];
+        $product->product_category_id = $input['product_category_id'];
+        $product->is_active = $input['is_active'];
 
         if ($request->hasFile('image')) {
             $image = $request->file('image');
@@ -149,12 +145,9 @@ class ProductController extends Controller
 
         $product->save();
 
-        return redirect()->route('products.index')
-            ->with(
-                [
-                    'successMessage' => 'Data Berhasil Diupdate'
-                ]
-            );
+        return redirect()->route('products.index')->with([
+            'successMessage' => 'Data Berhasil Diupdate'
+        ]);
     }
 
     /**
@@ -166,7 +159,7 @@ class ProductController extends Controller
 
         $product->delete();
 
-        return redirect()->route('products.index')
-            ->with('successMessage', 'Data Berhasil Dihapus');
+        return redirect()->route('products.index')->with('successMessage', 'Data Berhasil Dihapus');
     }
 }
+// </create_file>

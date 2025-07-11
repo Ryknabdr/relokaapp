@@ -65,14 +65,22 @@ class CartController extends Controller
 
     public function update($id, Request $request)
     {
+        $cartItem = $this->cart->items()->where('itemable_id', $id)->first();
 
-        $product = Product::findOrFail($id);
+        if (!$cartItem) {
+            return redirect()->route('cart.index')->with('error', 'Item tidak ditemukan di keranjang.');
+        }
+
+        $product = $cartItem->itemable;
 
         if($request->action == 'decrease')
         {
-            $this->cart->decreaseQuantity(item: $product);
+            $this->cart->decreaseQuantity(item: $cartItem);
         }else if($request->action == 'increase'){
-            $this->cart->increaseQuantity(item: $product);
+            if($cartItem->quantity >= $product->stock){
+                return redirect()->route('cart.index')->with('error', 'Jumlah produk melebihi stok yang tersedia.');
+            }
+            $this->cart->increaseQuantity(item: $cartItem);
         }
         
         return redirect()->route('cart.index')->with('success', 'Cart updated successfully.');

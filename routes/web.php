@@ -13,6 +13,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
 
 use App\Http\Controllers\ApiController;
+use App\Http\Controllers\AdminAuthController;
 
 //kode baru diubah menjadi seperti ini
 Route::get('/', [HomepageController::class, 'index'])->name('home');
@@ -20,6 +21,7 @@ Route::get('products', [HomepageController::class, 'products']);
 Route::get('product/{slug}', [HomepageController::class, 'product'])->name('product.show');
 Route::get('categories',[HomepageController::class, 'categories']);
 Route::get('category/{slug}', [HomepageController::class, 'category']);
+
 
 Route::get('cart', [HomepageController::class, 'cart'])->name('cart.index');
 Route::get('checkout', [HomepageController::class, 'checkout'])->name('checkout.index');
@@ -64,6 +66,16 @@ Route::group(['prefix'=>'dashboard','middleware'=>['auth','verified']], function
     Route::resource('products',ProductController::class);
     Route::resource('themes', ThemeController::class);
 
+});
+
+// Admin Auth Routes
+Route::prefix('admin')->group(function () {
+    Route::get('login', [AdminAuthController::class, 'showLoginForm'])->name('admin.login');
+    Route::post('login', [AdminAuthController::class, 'login'])->name('admin.login.submit');
+    Route::post('logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
+
+    Route::get('register', [AdminAuthController::class, 'showRegisterForm'])->name('admin.register');
+    Route::post('register', [AdminAuthController::class, 'register'])->name('admin.register.submit');
 });
 
 

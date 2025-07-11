@@ -1,3 +1,7 @@
+@php
+    use Illuminate\Support\Facades\Storage;
+@endphp
+
 <x-layouts.app :title="__('Products')">
     <div class="relative mb-6 w-full">
         <flux:heading size="xl">Update Product</flux:heading>
@@ -21,6 +25,8 @@
 
         <flux:input label="Slug" name="slug" value="{{ $product->slug }}" class="mb-3" />
 
+        <flux:textarea label="Description" name="description" class="mb-3">{{ $product->description }}</flux:textarea>
+
         <flux:input label="SKU" name="sku" value="{{ $product->sku }}" class="mb-3" />
 
         <flux:input label="Price" name="price" class="mb-3" value="{{ $product->price }}" />
@@ -30,22 +36,24 @@
         <flux:select label="Category" name="product_category_id" class="mb-3">
             <option value="">Select Category</option>
             @foreach($categories as $category)
-                <option value="{{ $category->id }}" {{ $product->product_category_id == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
+                <option value="{{ $category->id }}" {{ $product->product_category_id == $category->id ? 'selected' : '' }}>
+                    {{ $category->name }}</option>
             @endforeach
         </flux:select>
 
-        <flux:textarea label="Description" name="description" class="mb-3">{{ $product->description }}</flux:textarea>
-
         @if($product->image_url)
             <div class="mb-3">
-                <img src="{{ Storage::url($product->image_url) }}" alt="{{ $product->name }}" class="w-32 h-32 object-cover rounded">
+                <img src="{{ Storage::url($product->image_url) }}" alt="{{ $product->name }}"
+                    class="w-32 h-32 object-cover rounded">
             </div>
         @endif
 
         <flux:input type="file" label="Image" name="image" class="mb-3" />
 
-        <flux:checkbox label="Active" class="mb-6" name="is_active" {{ $product->is_active ? 'checked' : '' }} />
-
+        <label class="mb-6 flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" name="is_active" class="form-checkbox" {{ old('is_active', $product->is_active) ? 'checked' : '' }} />
+            <span>Active</span>
+        </label>
         <flux:separator variant="subtle" />
 
         <div class="mt-4">

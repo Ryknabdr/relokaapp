@@ -1,3 +1,7 @@
+@php
+    use Illuminate\Support\Facades\Storage;
+@endphp
+
 <x-layouts.app :title="__('Products')">
     <div class="relative mb-6 w-full">
         <flux:heading size="xl">Add New Product</flux:heading>
@@ -16,29 +20,32 @@
     <form action="{{ route('products.store') }}" method="post" enctype="multipart/form-data">
         @csrf
 
-        <flux:input label="Name" name="name" class="mb-3" />
+        <flux:input label="Name" name="name" value="{{ old('name') }}" class="mb-3" />
 
-        <flux:input label="Slug" name="slug" class="mb-3" />
+        <flux:input label="Slug" name="slug" value="{{ old('slug') }}" class="mb-3" />
 
-        <flux:input label="SKU" name="sku" class="mb-3" />
+        <flux:textarea label="Description" name="description" class="mb-3">{{ old('description') }}</flux:textarea>
 
-        <flux:input label="Price" name="price" class="mb-3" />
+        <flux:input label="SKU" name="sku" value="{{ old('sku') }}" class="mb-3" />
 
-        <flux:input label="Stock" name="stock" class="mb-3" />
+        <flux:input label="Price" name="price" class="mb-3" value="{{ old('price') }}" />
+
+        <flux:input label="Stock" name="stock" class="mb-3" value="{{ old('stock') }}" />
 
         <flux:select label="Category" name="product_category_id" class="mb-3">
             <option value="">Select Category</option>
             @foreach($categories as $category)
-                <option value="{{ $category->id }}">{{ $category->name }}</option>
+                <option value="{{ $category->id }}" {{ old('product_category_id') == $category->id ? 'selected' : '' }}>
+                    {{ $category->name }}</option>
             @endforeach
         </flux:select>
 
-        <flux:textarea label="Description" name="description" class="mb-3" />
-
         <flux:input type="file" label="Image" name="image" class="mb-3" />
 
-        <flux:checkbox label="Active" name="is_active" class="mb-6" checked />
-
+        <label class="mb-6 flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" name="is_active" class="form-checkbox" {{ old('is_active', true) ? 'checked' : '' }} />
+            <span>Active</span>
+        </label>
         <flux:separator variant="subtle" />
 
         <div class="mt-4">
