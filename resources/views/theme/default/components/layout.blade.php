@@ -135,7 +135,7 @@
             <div class="col-md-3 mb-3">
                <h6>Kontak Kami</h6>
                <ul class="list-unstyled small">
-                  <li><i class="bi bi-envelope"></i> info@kiwilantik.com</li>
+                  <li><i class="bi bi-envelope"></i> info@relokaantik.com</li>
                   <li><i class="bi bi-telephone"></i> +62 856 6100 994</li>
                   <li><i class="bi bi-geo-alt"></i> Tegal, Indonesia</li>
                </ul>
